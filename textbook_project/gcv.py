@@ -22,24 +22,21 @@ def detect_text(img_dir, ant_ind, entity):
     response = client.text_detection(image=image)
     texts = response.text_annotations
 
-    print('Texts:')
-
     for text in texts:
-        print('\n"{}"'.format(text.description))
         vertices = ([
             '({},{})'.format(vertex.x, vertex.y)
             for vertex in text.bounding_poly.vertices
         ])
 
-        print('bounds: {}'.format(','.join(vertices)))
-
-        return text
+        return '\n"{}"'.format(text.description)
 
     if response.error.message:
         raise Exception('{}\nFor more info on error messages, check: '
                         'https://cloud.google.com/apis/design/errors'.format(
                             response.error.message))
     return 'error'
+
+
 # Instantiates a client
 
 
@@ -55,7 +52,11 @@ def crop_image(img_dir, coord, entity, ant_ind):
 
     cv2_img = cv2.imread(f"{img_dir}/original.png")
     cropped_image = cv2_img[Y:Y + H, X:X + W]
+
+    if ant_ind < 10:
+        ant_ind = f"0{ant_ind}"
     cv2.imwrite(f'{img_dir}/{ant_ind}-{entity}.png', cropped_image)
+
 
 
 if __name__ == '__main__':
