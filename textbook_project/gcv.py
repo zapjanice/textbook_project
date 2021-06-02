@@ -58,7 +58,6 @@ def crop_image(img_dir, coord, entity, ant_ind):
     cv2.imwrite(f'{img_dir}/{ant_ind}-{entity}.png', cropped_image)
 
 
-
 if __name__ == '__main__':
     # The name of the image file to annotate
     file_name = os.path.abspath('resources/contour1.png')
