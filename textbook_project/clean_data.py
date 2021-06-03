@@ -78,13 +78,16 @@ class Making_DF:
         item_df = df[df['Entity'] == 'item']
         item_df.drop(labels=(['Entity','document_id']), axis = 1, inplace=True)
         item_df.rename(columns = {'top':'top_item', 'bottom':'bottom_item', 'left':'left_item', 'right':'right_item', 
-                                  'width':'width_item', 'area':'area_item', 'height':'height_item','aspect_ratio': 'aspect_ratio_item'}, inplace = True)
+                                  'width':'width_item', 'area':'area_item', 'height':'height_item',
+                                  'aspect_ratio': 'aspect_ratio_item'}, inplace = True)
         return item_df
     
     def merge_df(self, df, item_df):
         merge_df = df.merge(item_df, how='left', on=(['document_no', 'entity_count']))
         merge_df['y_diff'] = pd.Series.abs(merge_df['top_item'] - merge_df['top'])
         merge_df['x_diff'] = pd.Series.abs(merge_df['left_item'] - merge_df['left'])
+        merge_df['x_diff'].fillna(0, inplace = True)
+        merge_df['y_diff'].fillna(0, inplace = True)
         featured_df = merge_df[['Entity', 'top', 'bottom', 'left', 'right', 'area', 'width', 'height', 'aspect_ratio', 'x_diff', 'y_diff']]
         return featured_df    
         
