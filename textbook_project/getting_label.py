@@ -7,26 +7,12 @@ from linalgo.hub.client import LinalgoClient
 from linalgo.annotate.bbox import draw_bounding_boxes
 from tqdm import tqdm
 import linalgo
-<<<<<<< HEAD
-import random
 from clean_data import Making_DF
 
 class Getting_Label:
 
     def __init__(self, MYTOKEN):
         self.total_df = Making_DF(MYTOKEN).run_function()
-#         self.lin_train_df = pd.read_csv('featured_df.csv') 
-#         self.lin_test_df = pd.read_csv('featured_test_df.csv') 
-=======
-# from clean_data import Making_DF
-
-class Getting_Label:
-
-    def __init__(self):
-#         self.train_df, self.test_df = Making_DF(MYTOKEN).run_function()
-        self.lin_train_df = pd.read_csv('featured_df.csv') 
-        self.lin_test_df = pd.read_csv('featured_test_df.csv') 
->>>>>>> code to get labelled entity data for training
         self.pred_df = pd.read_csv('all_documents_dataframe.csv') 
     
     def add_features(self, pred_df):
@@ -54,21 +40,13 @@ class Getting_Label:
     
     def merge_for_xy_diff(self, pred_df, item_df):
         pred_df = pred_df.merge(item_df[['top_item', 'left_item', 'item_no']], how='left', on=(['item_no']))
-        pred_df['y_diff'] = pd.Series.abs(pred_df['top_item'] - pred_df['top'])
-        pred_df['x_diff'] = pd.Series.abs(pred_df['left_item'] - pred_df['left'])
+        pred_df['y_diff'] = pd.Series(pred_df['top_item'] - pred_df['top'])
+        pred_df['x_diff'] = pd.Series(pred_df['left_item'] - pred_df['left'])
         pred_df['x_diff'].fillna(0, inplace = True)
         pred_df['y_diff'].fillna(0, inplace = True)
         pred_df = pred_df.drop(['top_item', 'left_item'], axis = 1)
         return pred_df
     
-<<<<<<< HEAD
-=======
-#     def clean_train_df(self, train_df):
-#         train_df = train_df.drop(['top_item', 'left_item', 'bottom_item', 'right_item', 'area_item', 'width_item', 
-#                                   'height_item', 'aspect_ratio_item'], axis = 1)
-#         return train_df
-    
->>>>>>> code to get labelled entity data for training
     def match_bounding_box(self, pred_df, ground_truth_df): 
         data_set_df = pd.DataFrame(columns=pred_df.columns)
         with tqdm(total=pred_df.shape[0]) as pbar:
@@ -77,7 +55,7 @@ class Getting_Label:
                 temp_lin = ground_truth_df[ground_truth_df.document_id == row.document_id]
                 for index_lin, row_lin in temp_lin.iterrows():
                     lin_bb = linalgo.annotate.bbox.BoundingBox(row_lin.left, row_lin.right, row_lin.top, row_lin.bottom)
-                    if pred_bb.overlap(lin_bb) != 0:
+                    if pred_bb.overlap(lin_bb) > 0.51:
                         pred_df.loc[index, 'Entity'] = row_lin.Entity
                         data_set_df = data_set_df.append(pred_df.iloc[index], ignore_index=True)
                 pbar.update(1)
@@ -87,18 +65,9 @@ class Getting_Label:
         pred_df = self.add_features(self.pred_df)
         item_df = self.get_item_df(pred_df)
         pred_df = self.merge_for_xy_diff(pred_df, item_df)
-<<<<<<< HEAD
         pred_df = self.match_bounding_box(pred_df, self.total_df)
-        random.seed(0)
-        random.shuffle(pred_df)
         train_no = int(len(pred_df)*0.8)
         pred_train_df = pred_df[:train_no]
         pred_test_df = pred_df[train_no:]
-=======
-        lin_train_df = pd.read_csv('featured_df.csv') 
-        lin_test_df = pd.read_csv('featured_test_df.csv') 
-        pred_train_df = self.match_bounding_box(pred_df, lin_train_df)
-        pred_test_df = self.match_bounding_box(pred_df, lin_test_df)    
->>>>>>> code to get labelled entity data for training
         return  pred_train_df, pred_test_df
                     
