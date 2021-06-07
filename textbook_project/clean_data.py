@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from linalgo.annotate.models import Document, Annotation, Entity
 from linalgo.hub.client import LinalgoClient
 
-
 class Making_DF:
     def __init__(self, MYTOKEN):
         client = LinalgoClient(
@@ -27,7 +26,6 @@ class Making_DF:
                     doc_list.append(document)
                     ent_list.append(annotation.entity.name)
                     coord_list.append(annotation.target.selectors)
-
         return ent_list, coord_list, doc_list
 
     def getting_coordinates(self, coord_list):
@@ -38,7 +36,6 @@ class Making_DF:
         area = []
         width = []
         height = []
-
         for bb in range(len(coord_list)):
             for i in range(len(coord_list[bb])):
                 top.append(coord_list[bb][i].top)
@@ -59,7 +56,6 @@ class Making_DF:
         df.columns = ['Entity', 'document_id']
         df['Entity'] = df.Entity.astype(str)
         df['document_id'] = df.document_id.astype(str)
-
         df['document_no'] = df.groupby(['document_id']).ngroup()
 
         df['top'] = pd.DataFrame(top)
@@ -82,9 +78,9 @@ class Making_DF:
         df = df[df['document_no'].isin(keep_s)]
         df = df[df['Entity'] != 'None']
         return df
-
+      
     def item_df(self, df):
-        item_df = df[df['Entity'] == 'item']
+        item_df = df[df['Entity'] == 'item']        
         item_df.drop(labels=(['Entity', 'document_id']), axis=1, inplace=True)
         item_df.rename(columns={
             'top': 'top_item',
@@ -95,17 +91,16 @@ class Making_DF:
             'area': 'area_item',
             'height': 'height_item',
             'aspect_ratio': 'aspect_ratio_item'
-        },
-                       inplace=True)
+        }, inplace=True)
         return item_df
 
     def merge_df(self, df, item_df):
         merge_df = df.merge(item_df,
                             how='left',
                             on=(['document_no', 'entity_count']))
-        merge_df['y_diff'] = pd.Series.abs(merge_df['top_item'] -
+        merge_df['y_diff'] = pd.Series(merge_df['top_item'] -
                                            merge_df['top'])
-        merge_df['x_diff'] = pd.Series.abs(merge_df['left_item'] -
+        merge_df['x_diff'] = pd.Series(merge_df['left_item'] -
                                            merge_df['left'])
         merge_df['x_diff'].fillna(0, inplace=True)
         merge_df['y_diff'].fillna(0, inplace=True)
@@ -117,12 +112,15 @@ class Making_DF:
 
     def run_function(self):
         task = self.task
-        ent_list, coord_list, doc_list = self.making_list(docs=task.documents)
-        top, bottom, left, right, area, width, height = self.getting_coordinates(
-            coord_list)
-        df = self.making_df(ent_list, doc_list, top, bottom, left, right,
-                            area, width, height)
-        df = self.clean_data(df)
-        item_df = self.item_df(df)
-        featured_df = self.merge_df(df, item_df)
-        return featured_df
+        total_set = task.documents
+        total_set_list = [total_set]
+        featured_df_list = []
+        for docs in total_set_list:
+            ent_list, coord_list, doc_list = self.making_list(docs=docs)
+            top, bottom, left, right, area, width, height = self.getting_coordinates(coord_list)
+            df = self.making_df(ent_list, doc_list, top, bottom, left, right, area, width, height)
+            df = self.clean_data(df)
+            item_df = self.item_df(df)
+            featured_df = self.merge_df(df, item_df)
+            featured_df_list.append(featured_df)
+        return featured_df_list[0]
