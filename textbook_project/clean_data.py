@@ -8,13 +8,14 @@ from linalgo.annotate.models import Document, Annotation, Entity
 from linalgo.hub.client import LinalgoClient
 
 class Making_DF:
-
     def __init__(self, MYTOKEN):
-        client = LinalgoClient(token=MYTOKEN, api_url='https://prod.linhub.api.linalgo.com/v1')
-        self.task = client.get_task('a9b4a03b-3af5-476f-8656-c69a32ea9866', verbose=True)
+        client = LinalgoClient(
+            token=MYTOKEN, api_url='https://prod.linhub.api.linalgo.com/v1')
+        self.task = client.get_task('a9b4a03b-3af5-476f-8656-c69a32ea9866',
+                                    verbose=True)
 
     def making_list(self, docs):
-        ent_list =[]
+        ent_list = []
         coord_list = []
         doc_list = []
 
@@ -25,19 +26,16 @@ class Making_DF:
                     doc_list.append(document)
                     ent_list.append(annotation.entity.name)
                     coord_list.append(annotation.target.selectors)
-
         return ent_list, coord_list, doc_list
 
-
     def getting_coordinates(self, coord_list):
-        top= []
-        bottom=[]
-        left=[]
-        right=[]
+        top = []
+        bottom = []
+        left = []
+        right = []
         area = []
-        width=[]
-        height=[]
-
+        width = []
+        height = []
         for bb in range(len(coord_list)):
             for i in range(len(coord_list[bb])):
                 top.append(coord_list[bb][i].top)
@@ -50,14 +48,14 @@ class Making_DF:
 
         return top, bottom, left, right, area, width, height
 
-    def making_df(self, ent_list, doc_list, top, bottom, left, right, area, width, height):
+    def making_df(self, ent_list, doc_list, top, bottom, left, right, area,
+                  width, height):
         pd.options.display.max_colwidth = 200
         elem = {'Entity': ent_list, 'document_id': doc_list}
-        df= pd.DataFrame(elem)
+        df = pd.DataFrame(elem)
         df.columns = ['Entity', 'document_id']
         df['Entity'] = df.Entity.astype(str)
         df['document_id'] = df.document_id.astype(str)
-
         df['document_no'] = df.groupby(['document_id']).ngroup()
 
         df['top'] = pd.DataFrame(top)
@@ -80,25 +78,35 @@ class Making_DF:
         df = df[df['document_no'].isin(keep_s)]
         df = df[df['Entity'] != 'None']
         return df
-
+      
     def item_df(self, df):
-        item_df = df[df['Entity'] == 'item']
-        item_df.drop(labels=(['Entity','document_id']), axis = 1, inplace=True)
-        item_df.rename(columns = {'top':'top_item', 'bottom':'bottom_item', 'left':'left_item',
-                                  'right':'right_item', 'width':'width_item', 'area':'area_item',
-                                  'height':'height_item', 'aspect_ratio': 'aspect_ratio_item'}, inplace = True)
+        item_df = df[df['Entity'] == 'item']        
+        item_df.drop(labels=(['Entity', 'document_id']), axis=1, inplace=True)
+        item_df.rename(columns={
+            'top': 'top_item',
+            'bottom': 'bottom_item',
+            'left': 'left_item',
+            'right': 'right_item',
+            'width': 'width_item',
+            'area': 'area_item',
+            'height': 'height_item',
+            'aspect_ratio': 'aspect_ratio_item'
+        }, inplace=True)
         return item_df
 
     def merge_df(self, df, item_df):
-        merge_df = df.merge(item_df, how='left', on=(['document_no', 'entity_count']))
-        merge_df['y_diff'] = pd.Series.abs(merge_df['top_item'] - merge_df['top'])
-        merge_df['x_diff'] = pd.Series.abs(merge_df['left_item'] - merge_df['left'])
-        merge_df['x_diff'].fillna(0, inplace = True)
-        merge_df['y_diff'].fillna(0, inplace = True)
+        merge_df = df.merge(item_df,
+                            how='left',
+                            on=(['document_no', 'entity_count']))
+        merge_df['y_diff'] = pd.Series(merge_df['top_item'] -
+                                           merge_df['top'])
+        merge_df['x_diff'] = pd.Series(merge_df['left_item'] -
+                                           merge_df['left'])
+        merge_df['x_diff'].fillna(0, inplace=True)
+        merge_df['y_diff'].fillna(0, inplace=True)
         featured_df = merge_df[[
-            'Entity', 'document_id', 'top', 'bottom', 'left',
-            'right', 'area', 'width', 'height',
-            'aspect_ratio', 'x_diff', 'y_diff'
+            'Entity', 'document_id', 'top', 'bottom', 'left', 'right', 'area',
+            'width', 'height', 'aspect_ratio', 'x_diff', 'y_diff'
         ]]
         return featured_df
 
