@@ -7,14 +7,14 @@ from linalgo.hub.client import LinalgoClient
 from linalgo.annotate.bbox import draw_bounding_boxes
 from tqdm import tqdm
 import linalgo
-from clean_data import Making_DF
+from textbook_project.clean_data import Making_DF
 
 class Getting_Label:
 
     def __init__(self, MYTOKEN):
         self.total_df = Making_DF(MYTOKEN).run_function()
-        self.pred_df = pd.read_csv('all_documents_dataframe.csv') 
-    
+        self.pred_df = pd.read_csv('all_documents_dataframe.csv')
+
     def add_features(self, pred_df):
         pred_df = pred_df.rename(columns={'doc_number':'document_id'})
         pred_df = pred_df.iloc[1:,:]
@@ -23,7 +23,7 @@ class Getting_Label:
         pred_df['area'] = pd.Series(pred_df['height'] * pred_df['width'])
         pred_df['aspect_ratio'] = pd.Series(pred_df['height'] / pred_df['width'])
         return pred_df
-    
+
     def get_item_df(self, pred_df):
         item_df = pred_df[pred_df['language'] == 'item']
         def label(x):
@@ -33,11 +33,11 @@ class Getting_Label:
                 item=+item
             return item
         pred_df['item_no']  = pred_df['top'].apply(label)
-        item_df['item_no'] = item_df.index 
+        item_df['item_no'] = item_df.index
         item_df.rename(columns = {'top':'top_item', 'bottom':'bottom_item', 'left':'left_item',
                                   'right':'right_item'}, inplace = True)
         return item_df
-    
+
     def merge_for_xy_diff(self, pred_df, item_df):
         pred_df = pred_df.merge(item_df[['top_item', 'left_item', 'item_no']], how='left', on=(['item_no']))
         pred_df['y_diff'] = pd.Series(pred_df['top_item'] - pred_df['top'])
@@ -46,8 +46,8 @@ class Getting_Label:
         pred_df['y_diff'].fillna(0, inplace = True)
         pred_df = pred_df.drop(['top_item', 'left_item'], axis = 1)
         return pred_df
-    
-    def match_bounding_box(self, pred_df, ground_truth_df): 
+
+    def match_bounding_box(self, pred_df, ground_truth_df):
         data_set_df = pd.DataFrame(columns=pred_df.columns)
         with tqdm(total=pred_df.shape[0]) as pbar:
             for index, row in pred_df.iterrows():
@@ -60,7 +60,7 @@ class Getting_Label:
                         data_set_df = data_set_df.append(pred_df.iloc[index], ignore_index=True)
                 pbar.update(1)
         return data_set_df
-    
+
     def run_function(self):
         pred_df = self.add_features(self.pred_df)
         item_df = self.get_item_df(pred_df)
@@ -70,4 +70,3 @@ class Getting_Label:
         pred_train_df = pred_df[:train_no]
         pred_test_df = pred_df[train_no:]
         return  pred_train_df, pred_test_df
-                    
