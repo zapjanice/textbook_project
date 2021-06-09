@@ -86,7 +86,7 @@ class CreatingDataframe:
         return texts
         
     def make_dataframe(self, top, bottom, left, right, texts, language, doc_number):
-        df = pd.DataFrame(list(top, bottom, left, right, texts, language, doc_number)), columns=['top','bottom', 'left', 'right', 'text', 'language', 'doc_number'])
+        df = pd.DataFrame(list(zip(top, bottom, left, right, texts, language, doc_number)), columns=['top','bottom', 'left', 'right', 'text', 'language', 'doc_number'])
         return df
     
     def make_item_bounding_boxes(self, df):
