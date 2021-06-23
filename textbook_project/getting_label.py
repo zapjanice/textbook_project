@@ -9,6 +9,9 @@ from tqdm import tqdm
 import linalgo
 from textbook_project.clean_data import Making_DF
 
+'''Code use to match dataframe obtain from OCR tool 
+with annotated data to get labels to make label classification model'''
+
 class Getting_Label:
 
     def __init__(self, MYTOKEN):
